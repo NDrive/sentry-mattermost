@@ -18,21 +18,102 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from sentry.plugins import Plugin2
+import json
+import urllib2
+from django import forms
+from django.core.urlresolvers import reverse
+
+from sentry.plugins.bases import notify
+
 import sentry_mattermost
 
 
-class Mattermost(Plugin2):
+def get_project_full_name(project):
+    if project.team.name not in project.name:
+        return '%s %s' % (project.team.name, project.name)
+    return project.name
+
+
+def get_rules(notification, group, project):
+    rules = []
+    for rule in notification.rules:
+        rule_link = reverse('sentry-edit-project-rule', args=[
+            group.organization.slug, project.slug, rule.id
+        ])
+        rules.append((rule_link, rule.label.encode('utf-8')))
+    return ', '.join('<%s | %s>' % r for r in rules)
+
+
+class PayloadFactory:
+    @classmethod
+    def render_text(cls, params):
+        template = "__[{title}]({link})__ \n" \
+                 + "__Culprit__\n" \
+                 + "{culprit}\n" \
+                 + "__Project__\n" \
+                 + "{project}\n" \
+
+        if "rules" in params:
+            template += "__Triggered By__\n" \
+                     + "{rules}"
+
+        return template.format(**params)
+
+    @classmethod
+    def create(cls, plugin, notification):
+        event = notification.event
+        group = event.group
+        project = group.project
+
+        params = {
+            "title": group.message_short.encode('utf-8'),
+            "link": group.get_absolute_url(),
+            "culprit": group.culprit.encode('utf-8'),
+            "project": get_project_full_name(project).encode('utf-8')
+        }
+
+        if plugin.get_option('include_rules', project):
+            params["rules"] = get_rules(notification, group, project)
+
+        text = cls.render_text(params)
+
+        payload = {
+            "username": "Sentry",
+            "icon_url": "http://myovchev.github.io/sentry-slack/images/logo32.png", #noqa
+            "text": text
+        }
+        return payload
+
+
+def request(url, payload):
+    data = "payload=" + json.dumps(payload)
+    req = urllib2.Request(url, data)
+    response = urllib2.urlopen(req)
+    return response.read()
+
+
+class MattermostOptionsForm(notify.NotificationConfigurationForm):
+    webhook = forms.URLField(
+        help_text='Incoming Webhook URL',
+        widget=forms.URLInput(attrs={'class': 'span8'})
+    )
+    include_rules = forms.BooleanField(
+        help_text='Include triggering rules with notifications',
+        required=False,
+    )
+
+
+class Mattermost(notify.NotificationPlugin):
     title = 'Mattermost'
     slug = 'mattermost'
     description = 'Enables notifications for Mattermost Open Source Chat'
     version = sentry_mattermost.VERSION
-
     author = 'Andre Freitas NDrive'
     author_url = 'https://github.com/NDrive/sentry-mattermost'
+    project_conf_form = MattermostOptionsForm
 
-    def widget(self, request, group, **kwargs):
-        return "<p>Absolutely useless widget</p>"
-
-    def can_enable_for_projects(self):
-        return True
+    def notify(self, notification):
+        project = notification.event.group.project
+        webhook = self.get_option('webhook', project)
+        payload = PayloadFactory.create(self, notification)
+        return request(webhook, payload)

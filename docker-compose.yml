@@ -18,8 +18,7 @@ sentry:
     - "8081:9000"
   volumes:
     - .:/home/user/plugins
-  environment:
-    - PYTHONPATH=/home/user/plugins
+    - ./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost
 
 celery-beat:
   image: sentry
@@ -27,6 +26,9 @@ celery-beat:
     - redis
     - postgres
   command: sentry celery beat
+  volumes:
+    - .:/home/user/plugins
+    - ./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost
 
 celery-worker:
   image: sentry
@@ -34,3 +36,6 @@ celery-worker:
     - redis
     - postgres
   command: sentry celery worker
+  volumes:
+    - .:/home/user/plugins
+    - ./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost

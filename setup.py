@@ -31,9 +31,6 @@ setup(
     keywords="sentry mattermost devops",
     url="https://github.com/NDrive/sentry-mattermost",
     packages=['sentry_mattermost'],
-    install_requires=[
-       'sentry>=7.2.0'
-    ],
     entry_points={
        'sentry.plugins': [
             'mattermost = sentry_mattermost.plugin:Mattermost'

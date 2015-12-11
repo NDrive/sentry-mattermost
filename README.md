@@ -2,29 +2,21 @@
 A plugin for Sentry to enable notifications to Mattermost Open Source Chat.
 
 # Usage
-Install with pip:
+Install with pip and enable the plugin in a Project:
 
-    pip install sentry-mattermost
+    pip install sentry_mattermost
 
-Enable the integration inside a Project.
 
 # Contributing
-Use virtualenv and Python 2.7:
+We use Docker to setup a development stack. Make sure you have the Docker Toolbox
+installed first.
 
-    virtualenv -p python2.7 .env
-    source .env/bin/activate
+## First time setup
+Setups Python, Docker containers and Sentry admin:
 
-Install development requirements:
+    make bootstrap
 
-    pip install -r dev-requirements.txt
+## Development
+Each time you update the code, restart the containers:
 
-You can use Docker to test the plugin directly in a Sentry instance:
-
-    docker-compose up
-    cd plugins
-    python setup.py install
-
-
-# Test
-
-    py.test -v
+    make restart
