@@ -19,11 +19,20 @@
 # THE SOFTWARE.
 
 from sentry.plugins import Plugin2
+import sentry_mattermost
 
 
 class Mattermost(Plugin2):
-    def get_title(self):
-        return "Mattermost Plugin"
+    title = 'Mattermost'
+    slug = 'mattermost'
+    description = 'Enables notifications for Mattermost Open Source Chat'
+    version = sentry_mattermost.VERSION
+
+    author = 'Andre Freitas NDrive'
+    author_url = 'https://github.com/NDrive/sentry-mattermost'
+
+    def widget(self, request, group, **kwargs):
+        return "<p>Absolutely useless widget</p>"
 
     def can_enable_for_projects(self):
         return True

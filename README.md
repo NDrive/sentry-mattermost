@@ -21,6 +21,8 @@ Install development requirements:
 You can use Docker to test the plugin directly in a Sentry instance:
 
     docker-compose up
+    cd plugins
+    python setup.py install
 
 
 # Test

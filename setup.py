@@ -19,18 +19,24 @@
 # THE SOFTWARE.
 
 from setuptools import setup
+from sentry_mattermost import VERSION
 
 setup(
-    name="sentry-mattermost",
-    version="0.0.1",
+    name="sentry_mattermost",
+    version=VERSION,
     author="Andre Freitas",
     author_email="andre.freitas@ndrive.com",
     description=("A Sentry plugin to send Mattermost notifications."),
     license="MIT",
     keywords="sentry mattermost devops",
     url="https://github.com/NDrive/sentry-mattermost",
-    py_modules=['mattermost'],
+    packages=['sentry_mattermost'],
     install_requires=[
        'sentry>=7.2.0'
-    ]
+    ],
+    entry_points={
+       'sentry.plugins': [
+            'mattermost = sentry_mattermost.plugin:Mattermost'
+        ],
+    },
 )
