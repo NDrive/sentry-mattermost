@@ -1,4 +1,4 @@
-.PHONY: bootstrap-python, bootstrap-docker, restart, bootstrap, restart
+.PHONY: bootstrap-python, bootstrap-docker, restart, bootstrap, restart, deploy
 
 INSTALL="cd plugins && python setup.py install"
 
@@ -16,3 +16,7 @@ bootstrap: bootstrap-docker restart
 
 clean:
 	rm -rf .env build dist *.egg-info
+
+deploy:
+	python setup.py register
+	python setup.py sdist upload
