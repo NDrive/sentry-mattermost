@@ -5,7 +5,7 @@ This is based in the sentry-slack plugin: https://github.com/getsentry/sentry-sl
 # Usage
 Install with pip and enable the plugin in a Project:
 
-    pip install https://github.com/NDrive/sentry-mattermost/archive/master.zip
+    pip install sentry_mattermost
 
 # Contributing
 We use Docker to setup a development stack. Make sure you have the latest
