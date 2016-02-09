@@ -18,5 +18,4 @@ clean:
 	rm -rf .env build dist *.egg-info
 
 deploy:
-	python setup.py register
 	python setup.py sdist upload
