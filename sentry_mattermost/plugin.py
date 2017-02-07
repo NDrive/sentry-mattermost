@@ -110,7 +110,7 @@ class PayloadFactory:
 
         payload = {
             "username": "Sentry",
-            "icon_url": "http://myovchev.github.io/sentry-slack/images/logo32.png", #noqa
+            "icon_url": "https://myovchev.github.io/sentry-slack/images/logo32.png", #noqa
             "text": text
         }
         return payload
