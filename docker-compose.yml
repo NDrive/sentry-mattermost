@@ -1,41 +1,89 @@
-redis:
-  image: redis
+version: "2"
+services:
+  redis:
+    image: redis:4.0.1
 
-postgres:
-  image: postgres
-  environment:
-    - POSTGRES_PASSWORD=sentry
-    - POSTGRES_USER=sentry
-  volumes:
-    - /var/lib/postgresql/data
+  memcached:
+    image: memcached:1.5.0
 
-sentry:
-  image: sentry
-  links:
-    - redis
-    - postgres
-  ports:
-    - "8081:9000"
-  volumes:
-    - .:/home/user/plugins
-    - ./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost
+  postgres_sentry:
+    image: postgres:9.6.4
+    environment:
+      POSTGRES_PASSWORD: sentry
+      POSTGRES_USER: sentry
 
-celery-beat:
-  image: sentry
-  links:
-    - redis
-    - postgres
-  command: sentry celery beat
-  volumes:
-    - .:/home/user/plugins
-    - ./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost
+  sentry:
+    image: sentry:8.19.0
+    ports:
+      - "9000"
+    volumes:
+      - "./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost"
+      - ".:/root/plugins"
+    depends_on:
+      - redis
+      - memcached
+      - postgres_sentry
+    environment:
+      SENTRY_REDIS_HOST: redis
+      SENTRY_MEMCACHED_HOST: memcached
+      SENTRY_POSTGRES_HOST: postgres_sentry
+      SENTRY_DB_NAME: sentry
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentry
+      SENTRY_SECRET_KEY: 123456
 
-celery-worker:
-  image: sentry
-  links:
-    - redis
-    - postgres
-  command: sentry celery worker
-  volumes:
-    - .:/home/user/plugins
-    - ./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost
+  sentry_worker:
+    image: sentry:8.19.0
+    volumes:
+      - "./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost"
+      - ".:/root/plugins"
+    depends_on:
+      - redis
+      - memcached
+      - postgres_sentry
+    environment:
+      SENTRY_REDIS_HOST: redis
+      SENTRY_MEMCACHED_HOST: memcached
+      SENTRY_POSTGRES_HOST: postgres
+      SENTRY_DB_NAME: sentry
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentry
+      SENTRY_SECRET_KEY: 123456
+    command: sentry run worker
+
+  sentry_cron:
+    image: sentry:8.19.0
+    volumes:
+      - "./sentry_mattermost:/usr/local/lib/python2.7/site-packages/sentry_mattermost"
+      - ".:/root/plugins"
+    depends_on:
+      - redis
+      - memcached
+      - postgres_sentry
+    environment:
+      SENTRY_REDIS_HOST: redis
+      SENTRY_MEMCACHED_HOST: memcached
+      SENTRY_POSTGRES_HOST: postgres
+      SENTRY_DB_NAME: sentry
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentry
+      SENTRY_SECRET_KEY: 123456
+    command: sentry run cron
+
+  postgres_mattermost:
+    image: postgres:9.6.4
+    environment:
+      POSTGRES_PASSWORD: mattermost
+      POSTGRES_USER: mattermost
+
+  mattermost:
+    image: mattermost/mattermost-prod-app:4.1.0
+    ports:
+      - "80"
+    environment:
+      MM_USERNAME: mattermost
+      MM_PASSWORD: mattermost
+      MM_DBNAME: mattermost
+      DB_HOST: postgres_mattermost
+    depends_on:
+      - postgres_mattermost
