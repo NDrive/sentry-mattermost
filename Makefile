@@ -1,21 +1,11 @@
-.PHONY: bootstrap-python, bootstrap-docker, restart, bootstrap, restart, deploy
+INSTALL="cd ~/plugins && python setup.py install"
 
-INSTALL="cd plugins && python setup.py install"
-
-bootstrap-docker:
+bootstrap:
 	docker-compose up -d
-	docker exec -it --user root sentrymattermost_celery-worker_1 bash -c $(INSTALL)
-	docker exec -it --user root sentrymattermost_celery-beat_1 bash -c $(INSTALL)
-	docker exec -it --user root sentrymattermost_sentry_1 bash -c $(INSTALL)
-	docker exec -it sentrymattermost_sentry_1 sentry upgrade
+	docker-compose exec sentry bash -c $(INSTALL)
+	docker-compose exec sentry_worker bash -c $(INSTALL)
+	docker-compose exec sentry_cron bash -c $(INSTALL)
+	docker-compose exec sentry sentry upgrade
 
 restart:
-	docker-compose restart sentry celery-worker celery-beat
-
-bootstrap: bootstrap-docker restart
-
-clean:
-	rm -rf .env build dist *.egg-info
-
-deploy:
-	python setup.py sdist upload
+	docker-compose restart sentry sentry_worker sentry_cron
