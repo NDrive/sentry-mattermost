@@ -72,19 +72,7 @@ def get_tags(event):
 class PayloadFactory:
     @classmethod
     def render_text(cls, params):
-        template = "__[{title}]({link})__ \n" \
-                 + "__Culprit__\n" \
-                 + "{culprit}\n" \
-                 + "__Project__\n" \
-                 + "{project} \n" \
-
-        if "rules" in params:
-            template += "__Triggered By__\n" \
-                     + "{rules} \n"
-        if "tags" in params:
-            for k, v in params["tags"]:
-                template += "__%s__ \n%s\n" % (k, v)
-
+        template = "__{project}__\n__[{title}]({link})__ \n{culprit}\n"
         return template.format(**params)
 
     @classmethod
