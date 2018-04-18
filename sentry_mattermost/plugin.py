@@ -24,9 +24,8 @@ import operator
 
 from django import forms
 from django.db.models import Q
-
+from sentry import tagstore
 from sentry.plugins.bases import notify
-from sentry.models import TagKey, TagValue
 
 import sentry_mattermost
 
@@ -49,24 +48,8 @@ def get_tags(event):
     if not tag_list:
         return ()
 
-    key_labels = {
-        o.key: o.get_label()
-        for o in TagKey.objects.filter(
-            project=event.project,
-            key__in=[t[0] for t in tag_list],
-        )
-    }
-    value_labels = {
-        (o.key, o.value): o.get_label()
-        for o in TagValue.objects.filter(
-            reduce(operator.or_, (Q(key=k, value=v) for k, v in tag_list)),
-            project=event.project,
-        )
-    }
-    return (
-        (key_labels.get(k, k), value_labels.get((k, v), v))
-        for k, v in tag_list
-    )
+    return ((tagstore.get_tag_key_label(k), tagstore.get_tag_value_label(k, v)) 
+            for k, v in tag_list)
 
 
 class PayloadFactory:
